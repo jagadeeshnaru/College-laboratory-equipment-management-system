@@ -1,0 +1,23 @@
+{
+  "name": "college-laboratory-equipment-management-system",
+  "version": "1.0.0",
+  "description": "Project - 9: College Laboratory Equipment Management System (Lab EMS)",
+  "scripts": {
+    "install-all": "npm install --prefix backend && npm install --prefix frontend",
+    "start": "node backend/server.js",
+    "server": "node backend/server.js",
+    "client": "npm run dev --prefix frontend",
+    "dev": "node start-dev.js",
+    "build": "npm run build --prefix frontend"
+  },
+  "keywords": [
+    "react",
+    "nodejs",
+    "express",
+    "mysql",
+    "laboratory-equipment",
+    "college-ems"
+  ],
+  "author": "Project-9 Team",
+  "license": "ISC"
+}
