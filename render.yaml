@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: college-laboratory-ems
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_TYPE
+        value: sqlite
