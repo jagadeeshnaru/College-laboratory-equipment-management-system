@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Eye, RefreshCw } from 'lucide-react';
+import { Search, Plus, Filter, Eye, RefreshCw, Layers } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function EquipmentListPage({ onSelectEquipment, onAddEquipmentClick }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
   const [equipmentList, setEquipmentList] = useState([]);
   const [laboratories, setLaboratories] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -61,11 +64,20 @@ export default function EquipmentListPage({ onSelectEquipment, onAddEquipmentCli
     <div>
       {/* Top Header & Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a' }}>Equipment</h2>
-        <button className="btn btn-primary" onClick={onAddEquipmentClick}>
-          <Plus size={16} />
-          <span>Add Equipment</span>
-        </button>
+        <div>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            {isAdmin ? 'Equipment Inventory' : 'Equipment Catalog'}
+          </h2>
+          <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>
+            {isAdmin ? 'Manage, track and allocate campus laboratory equipment' : 'Browse equipment availability and check out items for laboratory sessions'}
+          </div>
+        </div>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={onAddEquipmentClick}>
+            <Plus size={16} />
+            <span>Add Equipment</span>
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

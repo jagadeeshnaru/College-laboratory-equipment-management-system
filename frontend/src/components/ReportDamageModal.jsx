@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function ReportDamageModal({ isOpen, onClose, onSuccess, preselectedEquipmentId, equipmentList = [] }) {
+  const { user } = useAuth();
   const [equipmentId, setEquipmentId] = useState(preselectedEquipmentId || '');
   const [issueDescription, setIssueDescription] = useState('');
   const [priority, setPriority] = useState('High');
@@ -38,7 +40,7 @@ export default function ReportDamageModal({ isOpen, onClose, onSuccess, preselec
         equipment_id: parseInt(equipmentId, 10),
         issue_description: issueDescription,
         priority,
-        reported_by: 'Lab Staff / User'
+        reported_by: user?.full_name || 'Faculty Member'
       });
       setSubmitting(false);
       setIssueDescription('');
@@ -54,7 +56,10 @@ export default function ReportDamageModal({ isOpen, onClose, onSuccess, preselec
     <div className="modal-overlay">
       <div className="modal-card">
         <div className="modal-header">
-          <h3 className="modal-title">Report Damage</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertTriangle size={18} color="#e11d48" />
+            <h3 className="modal-title">Report Equipment Issue / Damage</h3>
+          </div>
           <button className="modal-close" onClick={onClose}>
             <X size={18} />
           </button>
@@ -68,8 +73,12 @@ export default function ReportDamageModal({ isOpen, onClose, onSuccess, preselec
               </div>
             )}
 
+            <div style={{ padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.85rem', color: '#475569', marginBottom: '16px' }}>
+              Reporting As: <strong style={{ color: '#0f172a' }}>{user?.full_name || 'Faculty Member'}</strong> ({user?.department || 'Department'})
+            </div>
+
             <div className="form-group">
-              <label className="form-label">Equipment</label>
+              <label className="form-label">Equipment <span className="req">*</span></label>
               <select
                 className="form-select"
                 value={equipmentId}
@@ -86,12 +95,12 @@ export default function ReportDamageModal({ isOpen, onClose, onSuccess, preselec
             </div>
 
             <div className="form-group">
-              <label className="form-label">Issue Description</label>
+              <label className="form-label">Issue Description <span className="req">*</span></label>
               <textarea
                 className="form-textarea"
                 value={issueDescription}
                 onChange={(e) => setIssueDescription(e.target.value)}
-                placeholder="Describe the issue or defect in detail..."
+                placeholder="Describe the issue, malfunction or hardware defect in detail..."
                 rows={3}
                 required
               />
@@ -99,25 +108,29 @@ export default function ReportDamageModal({ isOpen, onClose, onSuccess, preselec
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Priority</label>
-              <select
-                className="form-select"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
-              </select>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
+                {['Low', 'Medium', 'High', 'Critical'].map((p) => (
+                  <label key={p} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="priority"
+                      value={p}
+                      checked={priority === p}
+                      onChange={(e) => setPriority(e.target.value)}
+                    />
+                    <span>{p}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
           <div className="modal-footer">
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {submitting ? 'Submitting...' : 'Submit'}
-            </button>
             <button type="button" className="btn btn-secondary" onClick={onClose} disabled={submitting}>
               Cancel
+            </button>
+            <button type="submit" className="btn btn-danger" disabled={submitting}>
+              {submitting ? 'Submitting...' : 'Submit Incident Report'}
             </button>
           </div>
         </form>

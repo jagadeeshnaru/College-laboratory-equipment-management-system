@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Wrench, AlertTriangle, GraduationCap } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipmentList = [] }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
   const [equipmentId, setEquipmentId] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
@@ -16,7 +20,10 @@ export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipm
     if (equipmentList.length > 0 && !equipmentId) {
       setEquipmentId(equipmentList[0].equipment_id);
     }
-  }, [equipmentList]);
+    if (!isAdmin && user) {
+      setReportedBy(user.full_name || 'Faculty Member');
+    }
+  }, [equipmentList, user, isAdmin]);
 
   if (!isOpen) return null;
 
@@ -35,8 +42,8 @@ export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipm
         equipment_id: parseInt(equipmentId, 10),
         issue_description: issueDescription,
         priority,
-        reported_by: reportedBy,
-        cost: parseFloat(cost) || 0.0,
+        reported_by: isAdmin ? reportedBy : (user?.full_name || 'Faculty Member'),
+        cost: isAdmin ? (parseFloat(cost) || 0.0) : 0.0,
         notes
       });
       setSubmitting(false);
@@ -52,7 +59,12 @@ export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipm
     <div className="modal-overlay">
       <div className="modal-card">
         <div className="modal-header">
-          <h3 className="modal-title">Add Maintenance Record</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Wrench size={18} color="#2563eb" />
+            <h3 className="modal-title">
+              {isAdmin ? 'Add Maintenance Record' : 'Report Equipment Maintenance Issue'}
+            </h3>
+          </div>
           <button className="modal-close" onClick={onClose}>
             <X size={18} />
           </button>
@@ -63,6 +75,15 @@ export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipm
             {error && (
               <div style={{ padding: '8px 12px', background: '#fee2e2', color: '#b91c1c', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '14px' }}>
                 {error}
+              </div>
+            )}
+
+            {!isAdmin && (
+              <div style={{ padding: '10px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '0.85rem', color: '#1e40af', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <GraduationCap size={16} />
+                <span>
+                  Reporting by: <strong>{user?.full_name}</strong> ({user?.department})
+                </span>
               </div>
             )}
 
@@ -89,13 +110,13 @@ export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipm
                 className="form-textarea"
                 value={issueDescription}
                 onChange={(e) => setIssueDescription(e.target.value)}
-                placeholder="e.g. Screen not working / Port issue"
+                placeholder="e.g. Screen flickering, network port 8 intermittent, power supply fan loud..."
                 rows={2}
                 required
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 1fr' : '1fr', gap: '12px' }}>
               <div className="form-group">
                 <label className="form-label">Priority</label>
                 <select
@@ -110,36 +131,54 @@ export default function AddMaintenanceModal({ isOpen, onClose, onSuccess, equipm
                 </select>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Reported By</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={reportedBy}
-                  onChange={(e) => setReportedBy(e.target.value)}
-                  placeholder="e.g. Dr. Ramesh Kumar"
-                />
-              </div>
+              {isAdmin && (
+                <div className="form-group">
+                  <label className="form-label">Reported By</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={reportedBy}
+                    onChange={(e) => setReportedBy(e.target.value)}
+                    placeholder="e.g. Dr. Ramesh Kumar"
+                  />
+                </div>
+              )}
             </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Notes / Diagnostic Remarks</label>
-              <input
-                type="text"
-                className="form-input"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Sent for OEM part replacement"
-              />
-            </div>
+            {isAdmin && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Estimated / Actual Repair Cost (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-input"
+                    value={cost}
+                    onChange={(e) => setCost(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Technician Notes</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="e.g. Sent for OEM part replacement"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="modal-footer">
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save Record'}
-            </button>
             <button type="button" className="btn btn-secondary" onClick={onClose} disabled={submitting}>
               Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {submitting ? 'Saving...' : isAdmin ? 'Save Maintenance Record' : 'Submit Issue Report'}
             </button>
           </div>
         </form>

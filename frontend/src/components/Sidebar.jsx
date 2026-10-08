@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const NAV_ITEMS = [
+// Navigation items tailored for Admin vs Faculty
+const ADMIN_NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'equipment', label: 'Equipment Catalog', icon: Server },
   { id: 'categories', label: 'Categories', icon: FolderTree },
@@ -26,9 +27,18 @@ const NAV_ITEMS = [
   { id: 'users', label: 'Faculty & Admins', icon: Users }
 ];
 
+const FACULTY_NAV_ITEMS = [
+  { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
+  { id: 'equipment', label: 'Equipment Inventory', icon: Server },
+  { id: 'laboratories', label: 'Campus Labs', icon: Building2 },
+  { id: 'allocations', label: 'My Allocations', icon: CalendarCheck },
+  { id: 'maintenance', label: 'Maintenance Requests', icon: Wrench }
+];
+
 export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
+  const navItems = isAdmin ? ADMIN_NAV_ITEMS : FACULTY_NAV_ITEMS;
 
   const handleItemClick = (id) => {
     setActiveTab(id);
@@ -63,14 +73,14 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
         <div className="sidebar-user-card">
           <div className={`sidebar-role-badge ${isAdmin ? 'admin' : 'faculty'}`}>
             {isAdmin ? <ShieldCheck size={14} /> : <GraduationCap size={14} />}
-            <span>{isAdmin ? 'System Administrator' : 'Faculty Portal'}</span>
+            <span>{isAdmin ? 'System Administrator' : 'Faculty Member'}</span>
           </div>
-          <div className="sidebar-user-name">{user?.full_name || 'Administrator'}</div>
+          <div className="sidebar-user-name">{user?.full_name || (isAdmin ? 'Administrator' : 'Faculty Member')}</div>
           <div className="sidebar-user-dept">{user?.department || 'Computer Science'}</div>
         </div>
 
         <nav className="sidebar-nav">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
@@ -89,7 +99,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, onClose }) {
         <div className="sidebar-footer">
           <div>College Lab EMS v2.0</div>
           <div style={{ color: '#94a3b8', fontWeight: 600, marginTop: '2px' }}>
-            {isAdmin ? '🛡️ Admin Access' : '🎓 Faculty Access'}
+            {isAdmin ? '🛡️ Administrator Mode' : '🎓 Faculty Mode'}
           </div>
         </div>
       </aside>

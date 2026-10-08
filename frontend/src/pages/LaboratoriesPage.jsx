@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Building2 } from 'lucide-react';
+import { Plus, Building2, Search, Users, MapPin } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function LaboratoriesPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
   const [laboratories, setLaboratories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     lab_name: '',
@@ -49,17 +53,38 @@ export default function LaboratoriesPage() {
     }
   };
 
+  const filteredLabs = laboratories.filter((l) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      l.lab_name?.toLowerCase().includes(term) ||
+      l.department?.toLowerCase().includes(term) ||
+      l.location?.toLowerCase().includes(term) ||
+      l.in_charge?.toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a' }}>College Laboratories</h2>
-        <button className="btn btn-primary" onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus size={16} />
-          <span>Add Laboratory</span>
-        </button>
+        <div>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            {isAdmin ? 'Campus Laboratories Management' : 'Campus Laboratories Directory'}
+          </h2>
+          <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>
+            {isAdmin ? 'Manage laboratory venues, seat capacity and designated in-charges' : 'Directory of departmental labs, locations, capacity and lab faculty in-charges'}
+          </div>
+        </div>
+
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus size={16} />
+            <span>Add Laboratory</span>
+          </button>
+        )}
       </div>
 
-      {showAddForm && (
+      {isAdmin && showAddForm && (
         <div className="card" style={{ marginBottom: '20px', padding: '20px', maxWidth: '700px' }}>
           <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '14px' }}>New Laboratory</h3>
           <form onSubmit={handleAddLab}>
@@ -131,6 +156,20 @@ export default function LaboratoriesPage() {
         </div>
       )}
 
+      {/* Search Bar */}
+      <div className="card" style={{ padding: '14px 18px', marginBottom: '20px' }}>
+        <div className="search-input-wrap" style={{ maxWidth: '400px' }}>
+          <Search className="search-icon" size={16} />
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Search laboratories, departments, in-charges..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="table-container">
         <table className="data-table">
           <thead>
@@ -140,22 +179,24 @@ export default function LaboratoriesPage() {
               <th>Department</th>
               <th>Location</th>
               <th>Capacity</th>
-              <th>In-Charge</th>
+              <th>Faculty In-Charge</th>
               <th>Total Equipment</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>Loading laboratories...</td></tr>
+            ) : filteredLabs.length === 0 ? (
+              <tr><td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>No laboratories found matching search.</td></tr>
             ) : (
-              laboratories.map((l) => (
+              filteredLabs.map((l) => (
                 <tr key={l.lab_id}>
                   <td style={{ fontWeight: 600 }}>LAB-{l.lab_id}</td>
                   <td style={{ fontWeight: 600, color: '#0f172a' }}>{l.lab_name}</td>
                   <td>{l.department}</td>
                   <td>{l.location}</td>
                   <td>{l.capacity} Seats</td>
-                  <td>{l.in_charge}</td>
+                  <td style={{ fontWeight: 500 }}>{l.in_charge}</td>
                   <td><span className="badge available">{l.total_equipment || 0} Assets</span></td>
                 </tr>
               ))

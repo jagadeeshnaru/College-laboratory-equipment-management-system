@@ -3,9 +3,12 @@ import { ArrowLeft, Edit, AlertTriangle, CalendarCheck, QrCode, Printer, X } fro
 import StatusBadge from '../components/StatusBadge';
 import ReportDamageModal from '../components/ReportDamageModal';
 import AddAllocationModal from '../components/AddAllocationModal';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
   const [equipment, setEquipment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -152,7 +155,7 @@ export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }
                 title={equipment.status !== 'Available' ? 'Only Available equipment can be allocated' : 'Allocate equipment'}
               >
                 <CalendarCheck size={16} />
-                <span>Allocate</span>
+                <span>{isAdmin ? 'Allocate' : 'Request Allocation'}</span>
               </button>
 
               <button
@@ -160,16 +163,18 @@ export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }
                 onClick={() => setIsReportModalOpen(true)}
               >
                 <AlertTriangle size={16} />
-                <span>Report Damage</span>
+                <span>Report Issue</span>
               </button>
 
-              <button
-                className="btn btn-success"
-                onClick={() => onEditClick(equipment.equipment_id)}
-              >
-                <Edit size={16} />
-                <span>Edit</span>
-              </button>
+              {isAdmin && (
+                <button
+                  className="btn btn-success"
+                  onClick={() => onEditClick(equipment.equipment_id)}
+                >
+                  <Edit size={16} />
+                  <span>Edit</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

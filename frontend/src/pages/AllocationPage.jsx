@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle, RotateCcw } from 'lucide-react';
+import { Plus, CheckCircle, RotateCcw, CalendarCheck, Search, Filter } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import AddAllocationModal from '../components/AddAllocationModal';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export default function AllocationPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
   const [allocations, setAllocations] = useState([]);
   const [equipmentList, setEquipmentList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedAlloc, setSelectedAlloc] = useState(null);
 
@@ -41,15 +47,66 @@ export default function AllocationPage() {
     }
   };
 
+  // Filter allocations
+  const filteredAllocations = allocations.filter((a) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      !searchTerm ||
+      a.allocation_code?.toLowerCase().includes(term) ||
+      a.equipment_name?.toLowerCase().includes(term) ||
+      a.allocated_to_name?.toLowerCase().includes(term) ||
+      a.department?.toLowerCase().includes(term);
+
+    const matchesStatus = selectedStatus === 'all' || a.status === selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a' }}>Equipment Allocation</h2>
+        <div>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            {isAdmin ? 'Equipment Allocations' : 'My Equipment Allocations'}
+          </h2>
+          <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '2px' }}>
+            {isAdmin ? 'Monitor, approve and track hardware checked out across faculties' : 'Track your borrowed equipment, return dates and request new items'}
+          </div>
+        </div>
+
         <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
           <Plus size={16} />
-          <span>Add Allocation</span>
+          <span>{isAdmin ? 'Add Allocation' : 'Request Allocation'}</span>
         </button>
+      </div>
+
+      {/* Filter & Search */}
+      <div className="card" style={{ padding: '14px 18px', marginBottom: '20px' }}>
+        <div className="filter-bar" style={{ marginBottom: 0 }}>
+          <div className="search-input-wrap">
+            <Search className="search-icon" size={16} />
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Search by allocation ID, equipment or faculty name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div style={{ minWidth: '160px' }}>
+            <select
+              className="form-select"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Allocations Table */}
@@ -60,8 +117,8 @@ export default function AllocationPage() {
               <th>ID</th>
               <th>Equipment</th>
               <th>Allocated To</th>
-              <th>From</th>
-              <th>To</th>
+              <th>Department</th>
+              <th>Period</th>
               <th>Status</th>
               <th style={{ textAlign: 'center' }}>Actions</th>
             </tr>
@@ -73,33 +130,45 @@ export default function AllocationPage() {
                   Loading allocations...
                 </td>
               </tr>
-            ) : allocations.length === 0 ? (
+            ) : filteredAllocations.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
-                  No equipment allocations found.
+                  No allocations found.
                 </td>
               </tr>
             ) : (
-              allocations.map((a) => (
-                <tr key={a.allocation_id}>
-                  <td style={{ fontWeight: 600, color: '#0f172a' }}>{a.allocation_code}</td>
-                  <td style={{ fontWeight: 600 }}>{a.equipment_name || 'Equipment'}</td>
-                  <td>{a.allocated_to_name || a.allocated_to_role}</td>
-                  <td>{a.from_date}</td>
-                  <td>{a.to_date}</td>
-                  <td>
-                    <StatusBadge status={a.status} />
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => setSelectedAlloc(a)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredAllocations.map((a) => {
+                const isMyAllocation =
+                  user &&
+                  (a.allocated_to_name?.toLowerCase().includes(user.full_name?.toLowerCase()) ||
+                    a.allocated_to_name?.toLowerCase().includes('faculty'));
+
+                return (
+                  <tr key={a.allocation_id}>
+                    <td style={{ fontWeight: 600, color: '#0f172a' }}>{a.allocation_code}</td>
+                    <td style={{ fontWeight: 600 }}>{a.equipment_name || 'Equipment'}</td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{a.allocated_to_name || a.allocated_to_role}</div>
+                      {!isAdmin && isMyAllocation && (
+                        <span style={{ fontSize: '0.72rem', color: '#2563eb', fontWeight: 600 }}>● Your Booking</span>
+                      )}
+                    </td>
+                    <td>{a.department || 'Computer Science'}</td>
+                    <td>{a.from_date} to {a.to_date}</td>
+                    <td>
+                      <StatusBadge status={a.status} />
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => setSelectedAlloc(a)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -151,7 +220,7 @@ export default function AllocationPage() {
                 </tbody>
               </table>
 
-              {selectedAlloc.status === 'Active' && (
+              {selectedAlloc.status === 'Active' && (isAdmin || user?.full_name === selectedAlloc.allocated_to_name) && (
                 <div style={{ marginTop: '20px' }}>
                   <button
                     className="btn btn-success"
