@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
@@ -14,12 +14,56 @@ import MaintenancePage from './pages/MaintenancePage';
 import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 
+function getTabFromPath() {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (!path || path === 'dashboard') return 'dashboard';
+  if (path === 'equipment' || path === 'equipments') return 'equipment';
+  if (path === 'equipment-detail') return 'equipment-detail';
+  if (path === 'add-equipment') return 'add-equipment';
+  if (path === 'edit-equipment') return 'edit-equipment';
+  if (path === 'categories' || path === 'category') return 'categories';
+  if (path === 'laboratories' || path === 'labs' || path === 'lab') return 'laboratories';
+  if (path === 'allocations' || path === 'allocation') return 'allocations';
+  if (path === 'maintenance') return 'maintenance';
+  if (path === 'reports' || path === 'report') return 'reports';
+  if (path === 'users' || path === 'faculty') return 'users';
+  return 'dashboard';
+}
+
 export default function App() {
   const { isAuthenticated, logout, user } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTabState] = useState(() => getTabFromPath());
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [editingEquipmentId, setEditingEquipmentId] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Sync state with browser address bar
+  const setActiveTab = (tab, pushUrl = true) => {
+    setActiveTabState(tab);
+    if (pushUrl) {
+      const targetPath = tab === 'dashboard' ? '/' : `/${tab}`;
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ tab }, '', targetPath);
+      }
+    }
+  };
+
+  // Listen to browser Back / Forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const tab = getTabFromPath();
+      setActiveTabState(tab);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // If user role is Faculty and tab is 'users', redirect to dashboard
+  useEffect(() => {
+    if (user && user.role === 'Faculty' && activeTab === 'users') {
+      setActiveTab('dashboard');
+    }
+  }, [user, activeTab]);
 
   // If not logged in, show login page
   if (!isAuthenticated) {
@@ -42,9 +86,9 @@ export default function App() {
   };
 
   const handleSaveSuccess = () => {
-    setActiveTab('equipment');
     setSelectedEquipmentId(null);
     setEditingEquipmentId(null);
+    setActiveTab('equipment');
   };
 
   const handleNavigate = (tab) => {
