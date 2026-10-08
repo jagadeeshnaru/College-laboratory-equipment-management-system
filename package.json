@@ -9,7 +9,8 @@
     "server": "node backend/server.js",
     "client": "npm run dev --prefix frontend",
     "dev": "node start-dev.js",
-    "test": "node backend/tests/api.test.js"
+    "test": "node backend/tests/api.test.js",
+    "db:view": "node backend/database/viewDb.js"
   },
   "keywords": [
     "react",
