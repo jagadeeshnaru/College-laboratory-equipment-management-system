@@ -127,7 +127,7 @@ async function runTests() {
       equipment_id: newEqId,
       issue_description: 'GPIO Pin Header broken during circuit wiring',
       priority: 'High',
-      reported_by: 'NARU JAGADEESH'
+      reported_by: 'Dr. Ramesh Kumar'
     });
     assert(reportRes.status === 201 && reportRes.body.data.status === 'Under Maintenance', 'Report damage creates maintenance ticket');
 

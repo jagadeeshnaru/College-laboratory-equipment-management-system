@@ -4,31 +4,17 @@ A full-stack web application designed for academic institutions to streamline th
 
 ---
 
-## 👥 Student Development Team
-
-| S.No. | Roll No. | Name of the Student | Role / Contribution |
-| :--- | :--- | :--- | :--- |
-| **1.** | `24691A05J1` | **SHAIK IRFAN** | Frontend UI & State Architecture |
-| **2.** | `24691A05J2` | **EDAGOTTI JAGADEESH** | Backend Express REST APIs & Validation |
-| **3.** | `24691A05J3` | **NARU JAGADEESH** | Database Design & SQL Query Optimization |
-| **4.** | `24691A05J4` | **BARAKI JAHNAVI** | Equipment Allocation & Return Workflow |
-| **5.** | `24691A05J5` | **BATHULA JAHNAVI** | Damage Reporting & Maintenance Tracking |
-| **6.** | `24691A05J6` | **KONDA JAHNAVI** | Aggregated Reports & Category Analytics |
-| **7.** | `24691A05J7` | **KOTHAPALLI BHARATH REDDY** | Authentication, Role Access & Git Documentation |
-
----
-
 ## 📖 Scenario & Problem Statement
 
 College laboratories contain hundreds of critical physical and digital assets, including desktop workstations, networking switches, oscilloscopes, function generators, printers, projectors, and specialized software licenses.
 
 ### Key Challenges of Manual Management:
 - Lack of centralized visibility into equipment availability and current operational condition.
-- Difficulties in tracking equipment allocations to students and faculty members.
+- Difficulties in tracking equipment allocations across departments and faculty members.
 - Delay in logging damage reports, scheduling technician repairs, and recording maintenance costs.
 - Inability to generate aggregate utilization reports by department or category for audit and budgeting.
 
-**Solution:** **Lab EMS** provides an intuitive, real-time dashboard and centralized system enabling students, faculty, and administrators to inspect, allocate, service, and report on laboratory equipment efficiently.
+**Solution:** **Lab EMS** provides an intuitive, real-time dashboard and centralized system enabling faculty and administrators to inspect, allocate, service, and report on laboratory equipment efficiently.
 
 ---
 
