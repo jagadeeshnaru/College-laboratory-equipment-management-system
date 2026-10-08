@@ -26,21 +26,17 @@ export default function App() {
     return <LoginPage onLoginSuccess={() => setActiveTab('dashboard')} />;
   }
 
-  const isAdmin = user?.role === 'Admin';
-
   const handleSelectEquipment = (id) => {
     setSelectedEquipmentId(id);
     setActiveTab('equipment-detail');
   };
 
   const handleAddEquipment = () => {
-    if (!isAdmin) return;
     setEditingEquipmentId(null);
     setActiveTab('add-equipment');
   };
 
   const handleEditEquipment = (id) => {
-    if (!isAdmin) return;
     setEditingEquipmentId(id);
     setActiveTab('edit-equipment');
   };
@@ -62,11 +58,11 @@ export default function App() {
   const getPageTitle = () => {
     switch (activeTab) {
       case 'dashboard':
-        return isAdmin ? 'Central Laboratory Dashboard' : 'Faculty Academic Dashboard';
+        return user?.role === 'Faculty' ? 'Faculty Academic Dashboard' : 'Central Laboratory Dashboard';
       case 'equipment':
-        return isAdmin ? 'Equipment Inventory Management' : 'Equipment Catalog & Availability';
+        return 'Equipment Inventory';
       case 'equipment-detail':
-        return 'Equipment Specifications & Status';
+        return 'Equipment Details';
       case 'add-equipment':
         return 'Add New Equipment';
       case 'edit-equipment':
@@ -74,11 +70,11 @@ export default function App() {
       case 'categories':
         return 'Equipment Categories';
       case 'laboratories':
-        return isAdmin ? 'Campus Laboratories Management' : 'Campus Laboratories Directory';
+        return 'Campus Laboratories';
       case 'allocations':
-        return isAdmin ? 'Equipment Allocations & Returns' : 'My Equipment Allocations';
+        return 'Equipment Allocations';
       case 'maintenance':
-        return isAdmin ? 'Maintenance & Damage Records' : 'Maintenance & Repair Requests';
+        return 'Maintenance & Damage Records';
       case 'reports':
         return 'Inventory & Operations Reports';
       case 'users':
@@ -128,7 +124,7 @@ export default function App() {
             />
           )}
 
-          {isAdmin && (activeTab === 'add-equipment' || activeTab === 'edit-equipment') && (
+          {(activeTab === 'add-equipment' || activeTab === 'edit-equipment') && (
             <AddEditEquipmentPage
               editId={editingEquipmentId}
               onBack={() => setActiveTab('equipment')}
@@ -136,7 +132,7 @@ export default function App() {
             />
           )}
 
-          {isAdmin && activeTab === 'categories' && <CategoriesPage />}
+          {activeTab === 'categories' && <CategoriesPage />}
 
           {activeTab === 'laboratories' && <LaboratoriesPage />}
 
@@ -146,9 +142,9 @@ export default function App() {
             <MaintenancePage onSelectEquipment={handleSelectEquipment} />
           )}
 
-          {isAdmin && activeTab === 'reports' && <ReportsPage />}
+          {activeTab === 'reports' && <ReportsPage />}
 
-          {isAdmin && activeTab === 'users' && <UsersPage />}
+          {activeTab === 'users' && (user?.role === 'Admin' ? <UsersPage /> : <DashboardPage onNavigate={handleNavigate} />)}
         </div>
       </main>
     </div>
