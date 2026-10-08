@@ -1,126 +1,222 @@
 import React, { useState } from 'react';
-import { User, Lock, FlaskConical, AlertCircle } from 'lucide-react';
+import {
+  ShieldCheck,
+  GraduationCap,
+  Lock,
+  User,
+  AlertCircle,
+  FlaskConical,
+  CheckCircle2,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  BarChart3
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage({ onLoginSuccess }) {
   const { login } = useAuth();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
-  const [role, setRole] = useState('Admin');
+  const [role, setRole] = useState('Admin'); // 'Admin' or 'Faculty'
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleRoleSelect = (selectedRole) => {
+    setRole(selectedRole);
+    setError('');
+    setUsername('');
+    setPassword('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!username.trim() || !password.trim()) {
+      setError('Please enter both username and password.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await login(username, password, role);
+      await login(username.trim(), password, role);
       setLoading(false);
       if (onLoginSuccess) onLoginSuccess();
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Invalid login credentials. Please check your username and password.');
       setLoading(false);
-    }
-  };
-
-  const handleRoleChange = (selectedRole) => {
-    setRole(selectedRole);
-    if (selectedRole === 'Admin') {
-      setUsername('admin');
-      setPassword('admin123');
-    } else if (selectedRole === 'Faculty') {
-      setUsername('faculty1');
-      setPassword('faculty123');
-    } else {
-      setUsername('24691A05J1');
-      setPassword('student123');
     }
   };
 
   return (
-    <div
-      className="login-page-bg"
-      style={{
-        backgroundImage: `linear-gradient(rgba(11, 23, 54, 0.82), rgba(15, 31, 75, 0.88)), url('https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1920&q=80')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
-    >
-      <div className="login-card">
-        <div className="login-icon-badge">
-          <FlaskConical size={34} />
+    <div className="login-wrapper">
+      <div className="login-backdrop-overlay" />
+
+      <div className="login-container">
+        {/* Left Side: Info & Features Banner */}
+        <div className="login-info-panel">
+          <div className="login-brand">
+            <div className="login-brand-icon">
+              <FlaskConical size={28} />
+            </div>
+            <div>
+              <h2>Lab EMS</h2>
+              <span className="brand-subtitle">Laboratory Equipment Management</span>
+            </div>
+          </div>
+
+          <div className="login-hero-text">
+            <h3>Unified Campus Equipment & Asset Platform</h3>
+            <p>
+              Streamline laboratory allocations, track equipment health, manage maintenance schedules,
+              and maintain full institutional inventory accountability.
+            </p>
+          </div>
+
+          <div className="login-features-list">
+            <div className="feature-item">
+              <div className="feature-icon admin-feat">
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <strong>Administrator Control Center</strong>
+                <p>Full inventory management, lab setup, system audits, and equipment analytics</p>
+              </div>
+            </div>
+
+            <div className="feature-item">
+              <div className="feature-icon faculty-feat">
+                <GraduationCap size={18} />
+              </div>
+              <div>
+                <strong>Faculty Portal</strong>
+                <p>Reserve lab apparatus, report maintenance issues, and manage classroom practicals</p>
+              </div>
+            </div>
+
+            <div className="feature-item">
+              <div className="feature-icon audit-feat">
+                <BarChart3 size={18} />
+              </div>
+              <div>
+                <strong>Real-Time Analytics</strong>
+                <p>Instant availability tracking, damage assessment, and departmental breakdown</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="login-footer-info">
+            <span>College Laboratory Management Portal &bull; v2.0</span>
+          </div>
         </div>
 
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '24px', lineHeight: 1.35 }}>
-          College Laboratory<br />Equipment Management System
-        </h2>
-
-        {error && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#fee2e2', color: '#b91c1c', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
-            <AlertCircle size={16} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group" style={{ textAlign: 'left' }}>
-            <div className="search-input-wrap">
-              <User className="search-icon" size={18} />
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
+        {/* Right Side: Login Form Panel */}
+        <div className="login-form-panel">
+          <div className="login-form-card">
+            <div className="form-header">
+              <span className="welcome-tag">Secure Portal</span>
+              <h2>Welcome to Lab EMS</h2>
+              <p>Select your portal and sign in with your authorized credentials</p>
             </div>
-          </div>
 
-          <div className="form-group" style={{ textAlign: 'left' }}>
-            <div className="search-input-wrap">
-              <Lock className="search-icon" size={18} />
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            {/* Portal Tab Switcher */}
+            <div className="portal-tabs">
+              <button
+                type="button"
+                className={`portal-tab ${role === 'Admin' ? 'active admin' : ''}`}
+                onClick={() => handleRoleSelect('Admin')}
+              >
+                <ShieldCheck size={18} />
+                <span>Admin Login</span>
+              </button>
+              <button
+                type="button"
+                className={`portal-tab ${role === 'Faculty' ? 'active faculty' : ''}`}
+                onClick={() => handleRoleSelect('Faculty')}
+              >
+                <GraduationCap size={18} />
+                <span>Faculty Login</span>
+              </button>
             </div>
+
+            {error && (
+              <div className="login-error-box">
+                <AlertCircle size={18} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="form-group">
+                <label className="form-label">
+                  {role === 'Admin' ? 'Administrator Username / Email' : 'Faculty Username / Staff ID'}
+                </label>
+                <div className="input-with-icon">
+                  <User size={18} className="field-icon" />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={role === 'Admin' ? 'Enter admin username' : 'Enter faculty username or email'}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label">Password</label>
+                </div>
+                <div className="input-with-icon">
+                  <Lock size={18} className="field-icon" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="toggle-password-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="role-indicator-badge">
+                <CheckCircle2 size={15} color={role === 'Admin' ? '#2563eb' : '#059669'} />
+                <span>
+                  Logging in as <strong>{role}</strong> ({role === 'Admin' ? 'Full System Administration' : 'Academic & Lab Operations'})
+                </span>
+              </div>
+
+              <button
+                type="submit"
+                className={`login-submit-btn ${role === 'Admin' ? 'btn-admin' : 'btn-faculty'}`}
+                disabled={loading}
+              >
+                {loading ? (
+                  <span>Authenticating...</span>
+                ) : (
+                  <>
+                    <span>Log In to {role} Portal</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', fontSize: '0.95rem', fontWeight: 600, marginTop: '4px' }}
-            disabled={loading}
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-
-          <div className="login-role-selector">
-            <span style={{ fontWeight: 600, color: '#334155' }}>Role:</span>
-            {['Admin', 'Student', 'Faculty'].map((r) => (
-              <label key={r} className="role-radio-label">
-                <input
-                  type="radio"
-                  name="role"
-                  value={r}
-                  checked={role === r}
-                  onChange={() => handleRoleChange(r)}
-                />
-                <span>{r}</span>
-              </label>
-            ))}
-          </div>
-        </form>
-
-        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9', fontSize: '0.78rem', color: '#64748b' }}>
-          <strong>Project - 9 Team:</strong> IRFAN, JAGADEESH E., JAGADEESH N., JAHNAVI BA., JAHNAVI BA., JAHNAVI K., BHARATH REDDY
         </div>
       </div>
     </div>

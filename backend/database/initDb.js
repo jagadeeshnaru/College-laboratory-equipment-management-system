@@ -11,7 +11,7 @@ async function seedDatabase() {
       password TEXT NOT NULL,
       full_name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      role TEXT NOT NULL DEFAULT 'Student',
+      role TEXT NOT NULL DEFAULT 'Faculty',
       department TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -69,7 +69,7 @@ async function seedDatabase() {
       allocation_code TEXT NOT NULL UNIQUE,
       equipment_id INTEGER NOT NULL,
       allocated_to_name TEXT NOT NULL,
-      allocated_to_role TEXT NOT NULL,
+      allocated_to_role TEXT NOT NULL DEFAULT 'Faculty',
       department TEXT NOT NULL,
       from_date TEXT NOT NULL,
       to_date TEXT NOT NULL,
@@ -99,6 +99,10 @@ async function seedDatabase() {
       FOREIGN KEY (equipment_id) REFERENCES equipment(equipment_id) ON DELETE CASCADE
     )
   `);
+
+  // Remove any legacy student records if present
+  await db.query("DELETE FROM users WHERE role = 'Student' OR role NOT IN ('Admin', 'Faculty')");
+  await db.query("UPDATE allocations SET allocated_to_name = 'Dr. Ramesh Kumar', allocated_to_role = 'Faculty' WHERE allocated_to_name LIKE '%IRFAN%' OR allocated_to_name LIKE '%JAGADEESH%' OR allocated_to_role LIKE '%Student%'");
 
   // Check if initial categories exist
   const catCheck = await db.query('SELECT COUNT(*) as count FROM categories');
@@ -132,24 +136,34 @@ async function seedDatabase() {
     }
   }
 
-  // Check if users exist
+  // Check if users exist or need seeding
   const userCheck = await db.query('SELECT COUNT(*) as count FROM users');
   if (userCheck.rows[0].count === 0) {
-    console.log('🌱 Seeding initial users...');
+    console.log('🌱 Seeding initial users (Admin & Faculty)...');
     const users = [
       ['admin', 'admin123', 'Administrator', 'admin@college.edu', 'Admin', 'Computer Science'],
       ['faculty1', 'faculty123', 'Dr. Ramesh Kumar', 'ramesh@college.edu', 'Faculty', 'Computer Science'],
       ['faculty2', 'faculty123', 'Prof. Sunita Rao', 'sunita@college.edu', 'Faculty', 'ECE'],
-      ['24691A05J1', 'student123', 'SHAIK IRFAN', '24691A05J1@college.edu', 'Student', 'CSE'],
-      ['24691A05J2', 'student123', 'EDAGOTTI JAGADEESH', '24691A05J2@college.edu', 'Student', 'CSE'],
-      ['24691A05J3', 'student123', 'NARU JAGADEESH', '24691A05J3@college.edu', 'Student', 'CSE'],
-      ['24691A05J4', 'student123', 'BARAKI JAHNAVI', '24691A05J4@college.edu', 'Student', 'CSE'],
-      ['24691A05J5', 'student123', 'BATHULA JAHNAVI', '24691A05J5@college.edu', 'Student', 'CSE'],
-      ['24691A05J6', 'student123', 'KONDA JAHNAVI', '24691A05J6@college.edu', 'Student', 'CSE'],
-      ['24691A05J7', 'student123', 'KOTHAPALLI BHARATH REDDY', '24691A05J7@college.edu', 'Student', 'CSE']
+      ['faculty3', 'faculty123', 'Mr. Anand Verma', 'anand@college.edu', 'Faculty', 'Information Technology'],
+      ['faculty4', 'faculty123', 'Mrs. Lakshmi Devi', 'lakshmi@college.edu', 'Faculty', 'Administration']
     ];
     for (const u of users) {
       await db.query('INSERT INTO users (username, password, full_name, email, role, department) VALUES (?, ?, ?, ?, ?, ?)', u);
+    }
+  } else {
+    // Ensure default admin and faculty exist
+    const ensureUsers = [
+      ['admin', 'admin123', 'Administrator', 'admin@college.edu', 'Admin', 'Computer Science'],
+      ['faculty1', 'faculty123', 'Dr. Ramesh Kumar', 'ramesh@college.edu', 'Faculty', 'Computer Science'],
+      ['faculty2', 'faculty123', 'Prof. Sunita Rao', 'sunita@college.edu', 'Faculty', 'ECE'],
+      ['faculty3', 'faculty123', 'Mr. Anand Verma', 'anand@college.edu', 'Faculty', 'Information Technology'],
+      ['faculty4', 'faculty123', 'Mrs. Lakshmi Devi', 'lakshmi@college.edu', 'Faculty', 'Administration']
+    ];
+    for (const u of ensureUsers) {
+      const exists = await db.query('SELECT user_id FROM users WHERE username = ?', [u[0]]);
+      if (exists.rows.length === 0) {
+        await db.query('INSERT INTO users (username, password, full_name, email, role, department) VALUES (?, ?, ?, ?, ?, ?)', u);
+      }
     }
   }
 
@@ -163,7 +177,7 @@ async function seedDatabase() {
       ['EQ003', 'Oscilloscope', 3, 3, 'Under Maintenance', '2023-11-20', '2 Years', 'Keysight DSOX1102G', 'KS-1102-7723', '100 MHz 2-Channel Digital Storage Oscilloscope with waveform generator', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80'],
       ['EQ004', 'Printer', 5, 4, 'Available', '2024-01-10', '1 Year', 'HP LaserJet Pro M404dn', 'HP-M404-3310', 'High speed duplex network laser printer for lab documentation', 'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=600&q=80'],
       ['EQ005', 'Projector', 5, 5, 'Damaged', '2023-09-05', '2 Years', 'Epson EB-X06 XGA', 'EP-X06-9905', 'Epson 3600 Lumens HDMI presentation ceiling projector in Seminar Hall', 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=600&q=80'],
-      ['EQ006', 'Dell Laptop', 1, 1, 'Available', '2024-10-01', '3 Years', 'Latitude 5440', 'DL-5440-6677', 'High performance laptop for student and faculty research projects.', 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80'],
+      ['EQ006', 'Dell Laptop', 1, 1, 'Available', '2024-10-01', '3 Years', 'Latitude 5440', 'DL-5440-6677', 'High performance laptop for faculty research projects.', 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80'],
       ['EQ007', 'Wi-Fi Access Point', 2, 2, 'Available', '2024-05-18', '3 Years', 'Aruba AP-505', 'AR-505-1204', 'Dual-radio Wi-Fi 6 enterprise access point for networking infrastructure.', 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=600&q=80'],
       ['EQ008', 'Function Generator', 3, 3, 'Available', '2023-12-01', '2 Years', 'Rigol DG1022Z', 'RG-1022-8819', '25 MHz Arbitrary Waveform Generator with dual independent output channels.', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80'],
       ['EQ009', 'MATLAB Campus License', 4, 1, 'In Use', '2024-01-01', 'Annual Subscription', 'MATLAB R2024b', 'LIC-MTLB-2024', 'Concurrent network license with Simulink and DSP toolboxes.', 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'],
@@ -183,12 +197,12 @@ async function seedDatabase() {
   // Check if allocations exist
   const allocCheck = await db.query('SELECT COUNT(*) as count FROM allocations');
   if (allocCheck.rows[0].count === 0) {
-    console.log('🌱 Seeding initial allocations...');
+    console.log('🌱 Seeding initial allocations (Faculty)...');
     const allocations = [
-      ['A001', 1, 'Student (CSE)', 'Student (CSE)', 'CSE', '2026-09-01', '2026-09-30', 'Final Year Mini Project Development', 'Active', null],
-      ['A002', 5, 'Faculty', 'Faculty', 'CSE', '2026-09-10', '2026-09-12', 'Guest Lecture on Cloud Computing', 'Completed', '2026-09-12'],
-      ['A003', 10, 'Student (ECE)', 'Student (ECE)', 'ECE', '2026-09-15', '2026-09-25', 'Computer Networks Practical Assignment', 'Active', null],
-      ['A004', 6, 'Student (CSE)', 'Student (CSE)', 'CSE', '2026-09-01', '2026-09-15', 'Distributed Systems Lab Evaluation', 'Completed', '2026-09-15']
+      ['A001', 1, 'Dr. Ramesh Kumar', 'Faculty', 'CSE', '2026-09-01', '2026-09-30', 'Advanced Distributed Systems Laboratory Research', 'Active', null],
+      ['A002', 5, 'Prof. Sunita Rao', 'Faculty', 'ECE', '2026-09-10', '2026-09-12', 'Faculty Workshop on VLSI Circuit Design', 'Completed', '2026-09-12'],
+      ['A003', 2, 'Mr. Anand Verma', 'Faculty', 'IT', '2026-09-15', '2026-09-25', 'Computer Networks Practical Assignment and Testing', 'Active', null],
+      ['A004', 6, 'Dr. Ramesh Kumar', 'Faculty', 'CSE', '2026-09-01', '2026-09-15', 'Distributed Systems Lab Evaluation and Demo', 'Completed', '2026-09-15']
     ];
     for (const a of allocations) {
       await db.query(`
@@ -217,7 +231,7 @@ async function seedDatabase() {
     }
   }
 
-  console.log('✅ Database tables and seed data ready!');
+  console.log('✅ Database tables and seed data ready (Admin & Faculty configured)!');
 }
 
 module.exports = { seedDatabase };

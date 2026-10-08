@@ -3,20 +3,20 @@ import React from 'react';
 const CATEGORY_COLORS = [
   '#3b82f6', // Computer - Blue
   '#10b981', // Networking - Green
-  '#22c55e', // Electronics - Lime/Green
-  '#8b5cf6', // Software - Purple
-  '#f59e0b', // Others - Amber
+  '#8b5cf6', // Electronics - Purple
+  '#f59e0b', // Software - Amber
+  '#06b6d4', // Others - Cyan
   '#ec4899', // Pink fallback
 ];
 
 export default function CategoryChart({ data = [] }) {
   // Normalize items
   const items = data.length > 0 ? data : [
-    { category: 'Computers', count: 40 },
-    { category: 'Networking', count: 20 },
-    { category: 'Electronics', count: 28 },
-    { category: 'Software', count: 12 },
-    { category: 'Others', count: 8 }
+    { category: 'Computers', count: 4 },
+    { category: 'Networking', count: 3 },
+    { category: 'Electronics', count: 3 },
+    { category: 'Software', count: 1 },
+    { category: 'Others', count: 1 }
   ];
 
   const total = items.reduce((acc, item) => acc + (parseInt(item.count || item.total_equipment || 0, 10)), 0) || 1;
@@ -34,10 +34,10 @@ export default function CategoryChart({ data = [] }) {
     const color = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
 
     // Convert polar to cartesian
-    const radius = 70;
+    const radius = 68;
     const innerRadius = 38;
-    const cx = 90;
-    const cy = 90;
+    const cx = 85;
+    const cy = 85;
 
     const startRad = ((startAngle - 90) * Math.PI) / 180;
     const endRad = ((endAngle - 90) * Math.PI) / 180;
@@ -71,13 +71,19 @@ export default function CategoryChart({ data = [] }) {
   });
 
   return (
-    <div className="card" style={{ height: '100%' }}>
-      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: '20px' }}>
-        Equipment by Category
-      </h3>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '20px' }}>
-        <div style={{ position: 'relative', width: '180px', height: '180px' }}>
-          <svg viewBox="0 0 180 180" width="100%" height="100%">
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+          Equipment by Category
+        </h3>
+        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+          Asset allocation categorized by apparatus type
+        </span>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '16px', flexWrap: 'wrap', minHeight: '190px' }}>
+        <div style={{ position: 'relative', width: '170px', height: '170px', flexShrink: 0 }}>
+          <svg viewBox="0 0 170 170" width="100%" height="100%">
             {slices.map((slice, i) => (
               <path
                 key={i}
@@ -91,22 +97,36 @@ export default function CategoryChart({ data = [] }) {
               </path>
             ))}
           </svg>
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}
+          >
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{total}</div>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>Total</div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '130px' }}>
           {slices.map((slice, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem' }}>
               <span
                 style={{
                   width: '10px',
                   height: '10px',
                   borderRadius: '50%',
                   backgroundColor: slice.color,
-                  display: 'inline-block'
+                  display: 'inline-block',
+                  flexShrink: 0
                 }}
               />
               <span style={{ color: '#475569', fontWeight: 500 }}>{slice.name}:</span>
-              <strong style={{ color: '#0f172a' }}>{slice.value}</strong>
+              <strong style={{ color: '#0f172a', marginLeft: 'auto' }}>{slice.value}</strong>
             </div>
           ))}
         </div>

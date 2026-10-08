@@ -46,7 +46,7 @@ router.post('/', validate(allocationValidationRules), async (req, res, next) => 
     const {
       equipment_id,
       allocated_to_name,
-      allocated_to_role = 'Student (CSE)',
+      allocated_to_role = 'Faculty',
       department = 'CSE',
       from_date,
       to_date,

@@ -47,7 +47,7 @@ router.post('/report', validate(damageReportValidationRules), async (req, res, n
       equipment_id,
       issue_description,
       priority = 'High',
-      reported_by = 'Staff / Student',
+      reported_by = 'Faculty / Staff',
       notes = ''
     } = req.body;
 

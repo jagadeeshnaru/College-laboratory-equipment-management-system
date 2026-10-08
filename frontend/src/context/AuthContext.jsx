@@ -3,29 +3,26 @@ import { api } from '../services/api';
 
 const AuthContext = createContext();
 
-const DEFAULT_ADMIN = {
-  user_id: 1,
-  username: 'admin',
-  full_name: 'Administrator',
-  email: 'admin@college.edu',
-  role: 'Admin',
-  department: 'Computer Science'
-};
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('lab_ems_user');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.role === 'Admin' || parsed.role === 'Faculty')) {
+          return parsed;
+        }
       } catch (e) {
-        return DEFAULT_ADMIN;
+        return null;
       }
     }
-    return DEFAULT_ADMIN;
+    return null;
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const saved = localStorage.getItem('lab_ems_user');
+    return !!saved;
+  });
 
   useEffect(() => {
     if (user) {
@@ -42,29 +39,21 @@ export function AuthProvider({ children }) {
       const res = await api.login({ username, password, role });
       if (res.success && res.user) {
         setUser(res.user);
-        return { success: true };
+        return { success: true, user: res.user };
       }
     } catch (err) {
-      // Fallback for easy demo login
-      const fallbackUser = {
-        user_id: 99,
-        username: username || 'demo_user',
-        full_name: username === 'admin' ? 'Administrator' : username.toUpperCase(),
-        email: `${username || 'user'}@college.edu`,
+      // Fallback for seamless demo / offline usage
+      let fallbackUser = {
+        user_id: role === 'Admin' ? 1 : 2,
+        username: username || (role === 'Admin' ? 'admin' : 'faculty1'),
+        full_name: role === 'Admin' ? 'Administrator' : username === 'faculty2' ? 'Prof. Sunita Rao' : 'Dr. Ramesh Kumar',
+        email: `${username || (role === 'Admin' ? 'admin' : 'faculty1')}@college.edu`,
         role: role || 'Admin',
-        department: 'CSE'
+        department: role === 'Admin' ? 'Computer Science' : username === 'faculty2' ? 'ECE' : 'Computer Science'
       };
       setUser(fallbackUser);
-      return { success: true };
+      return { success: true, user: fallbackUser };
     }
-  };
-
-  const switchRole = (newRole) => {
-    setUser((prev) => ({
-      ...prev,
-      role: newRole,
-      full_name: newRole === 'Admin' ? 'Administrator' : newRole === 'Faculty' ? 'Dr. Ramesh Kumar' : 'NARU JAGADEESH'
-    }));
   };
 
   const logout = () => {
@@ -74,7 +63,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, switchRole }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

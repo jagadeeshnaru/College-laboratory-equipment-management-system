@@ -5,8 +5,8 @@ import { api } from '../services/api';
 export default function AddAllocationModal({ isOpen, onClose, onSuccess, preselectedEquipmentId, equipmentList = [] }) {
   const [equipmentId, setEquipmentId] = useState(preselectedEquipmentId || '');
   const [allocatedToName, setAllocatedToName] = useState('');
-  const [allocatedToRole, setAllocatedToRole] = useState('Student (CSE)');
-  const [department, setDepartment] = useState('CSE');
+  const [allocatedToRole, setAllocatedToRole] = useState('Faculty');
+  const [department, setDepartment] = useState('Computer Science');
   const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
   const [toDate, setToDate] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -93,13 +93,13 @@ export default function AddAllocationModal({ isOpen, onClose, onSuccess, presele
             </div>
 
             <div className="form-group">
-              <label className="form-label">Allocated To (Student / Faculty Name) <span className="req">*</span></label>
+              <label className="form-label">Allocated To (Faculty / Staff Name) <span className="req">*</span></label>
               <input
                 type="text"
                 className="form-input"
                 value={allocatedToName}
                 onChange={(e) => setAllocatedToName(e.target.value)}
-                placeholder="e.g. SHAIK IRFAN / Dr. Ramesh Kumar"
+                placeholder="e.g. Dr. Ramesh Kumar / Prof. Sunita Rao"
                 required
               />
             </div>
@@ -112,10 +112,10 @@ export default function AddAllocationModal({ isOpen, onClose, onSuccess, presele
                   value={allocatedToRole}
                   onChange={(e) => setAllocatedToRole(e.target.value)}
                 >
-                  <option value="Student (CSE)">Student (CSE)</option>
-                  <option value="Student (ECE)">Student (ECE)</option>
                   <option value="Faculty">Faculty</option>
+                  <option value="Lab In-Charge">Lab In-Charge</option>
                   <option value="Research Scholar">Research Scholar</option>
+                  <option value="Department Staff">Department Staff</option>
                 </select>
               </div>
 
@@ -126,10 +126,10 @@ export default function AddAllocationModal({ isOpen, onClose, onSuccess, presele
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                 >
-                  <option value="CSE">CSE</option>
-                  <option value="ECE">ECE</option>
-                  <option value="IT">IT</option>
-                  <option value="MECH">MECH</option>
+                  <option value="Computer Science">Computer Science (CSE)</option>
+                  <option value="ECE">Electronics & Comm (ECE)</option>
+                  <option value="Information Technology">Information Technology (IT)</option>
+                  <option value="Administration">Administration</option>
                 </select>
               </div>
             </div>
@@ -159,12 +159,12 @@ export default function AddAllocationModal({ isOpen, onClose, onSuccess, presele
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Purpose / Project Description</label>
+              <label className="form-label">Purpose / Course Practical</label>
               <textarea
                 className="form-textarea"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
-                placeholder="e.g. Final Year Capstone Project evaluation"
+                placeholder="e.g. Distributed Systems Lab evaluation and practical demonstration"
                 rows={2}
               />
             </div>

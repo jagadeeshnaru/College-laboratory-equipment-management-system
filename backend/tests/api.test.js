@@ -70,8 +70,8 @@ async function runTests() {
     const adminLogin = await apiCall('POST', '/api/auth/login', { username: 'admin', password: 'admin123', role: 'Admin' });
     assert(adminLogin.status === 200 && adminLogin.body.success === true, 'Admin login succeeds with valid credentials');
 
-    const studentLogin = await apiCall('POST', '/api/auth/login', { username: '24691A05J1', password: 'student123', role: 'Student' });
-    assert(studentLogin.status === 200 && studentLogin.body.user.role === 'Student', 'Student login succeeds with Roll No 24691A05J1');
+    const facultyLogin = await apiCall('POST', '/api/auth/login', { username: 'faculty1', password: 'faculty123', role: 'Faculty' });
+    assert(facultyLogin.status === 200 && facultyLogin.body.user.role === 'Faculty', 'Faculty login succeeds with username faculty1');
 
     const badLogin = await apiCall('POST', '/api/auth/login', { username: 'admin', password: 'wrongpassword' });
     assert(badLogin.status === 401 && badLogin.body.success === false, 'Invalid credentials rejected with 401 Unauthorized');
@@ -100,8 +100,8 @@ async function runTests() {
     console.log('\n4. Testing Equipment Allocation & Return:');
     const allocRes = await apiCall('POST', '/api/allocations', {
       equipment_id: newEqId,
-      allocated_to_name: 'SHAIK IRFAN',
-      allocated_to_role: 'Student (CSE)',
+      allocated_to_name: 'Dr. Ramesh Kumar',
+      allocated_to_role: 'Faculty',
       department: 'CSE',
       from_date: '2026-10-01',
       to_date: '2026-10-15',

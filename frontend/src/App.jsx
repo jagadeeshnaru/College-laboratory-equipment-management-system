@@ -15,10 +15,11 @@ import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 
 export default function App() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [editingEquipmentId, setEditingEquipmentId] = useState(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // If not logged in, show login page
   if (!isAuthenticated) {
@@ -46,33 +47,40 @@ export default function App() {
     setEditingEquipmentId(null);
   };
 
+  const handleNavigate = (tab) => {
+    setSelectedEquipmentId(null);
+    setEditingEquipmentId(null);
+    setActiveTab(tab);
+    setIsMobileSidebarOpen(false);
+  };
+
   // Get Page Title for Navbar
   const getPageTitle = () => {
     switch (activeTab) {
       case 'dashboard':
-        return 'Dashboard';
+        return user?.role === 'Faculty' ? 'Faculty Academic Dashboard' : 'Central Laboratory Dashboard';
       case 'equipment':
-        return 'Equipment';
+        return 'Equipment Inventory';
       case 'equipment-detail':
         return 'Equipment Details';
       case 'add-equipment':
-        return 'Add Equipment';
+        return 'Add New Equipment';
       case 'edit-equipment':
-        return 'Edit Equipment';
+        return 'Edit Equipment Details';
       case 'categories':
-        return 'Categories';
+        return 'Equipment Categories';
       case 'laboratories':
-        return 'Laboratories';
+        return 'Campus Laboratories';
       case 'allocations':
-        return 'Equipment Allocation';
+        return 'Equipment Allocations';
       case 'maintenance':
-        return 'Maintenance Records';
+        return 'Maintenance & Damage Records';
       case 'reports':
-        return 'Equipment Reports';
+        return 'Inventory & Operations Reports';
       case 'users':
-        return 'Users & Student Team';
+        return 'Faculty & User Management';
       default:
-        return 'Lab EMS';
+        return 'Lab EMS Portal';
     }
   };
 
@@ -84,11 +92,9 @@ export default function App() {
             ? 'equipment'
             : activeTab
         }
-        setActiveTab={(tab) => {
-          setSelectedEquipmentId(null);
-          setEditingEquipmentId(null);
-          setActiveTab(tab);
-        }}
+        setActiveTab={handleNavigate}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
       />
 
       <main className="main-content">
@@ -97,10 +103,11 @@ export default function App() {
           onLogoutClick={() => {
             logout();
           }}
+          onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
         <div className="page-body">
-          {activeTab === 'dashboard' && <DashboardPage />}
+          {activeTab === 'dashboard' && <DashboardPage onNavigate={handleNavigate} />}
 
           {activeTab === 'equipment' && (
             <EquipmentListPage

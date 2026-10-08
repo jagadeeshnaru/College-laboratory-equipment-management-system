@@ -11,7 +11,7 @@ const INITIAL_FORM = {
   warranty: '3 Years',
   model_number: '',
   serial_number: '',
-  description: 'High performance laptop for student use.',
+  description: 'High performance laptop for laboratory and faculty research use.',
   image_url: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80'
 };
 
@@ -248,7 +248,7 @@ export default function AddEditEquipmentPage({ editId, onBack, onSaveSuccess }) 
               className="form-textarea"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="High performance laptop for student use."
+              placeholder="High performance laptop for laboratory and faculty research use."
               rows={4}
             />
           </div>

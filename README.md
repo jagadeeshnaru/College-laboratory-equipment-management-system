@@ -231,11 +231,11 @@ DELETE FROM allocations WHERE allocation_id = 4;
 
 ### Demo Credentials
 
-| Role | Username | Password |
-| :--- | :--- | :--- |
-| **Admin** | `admin` | `admin123` |
-| **Faculty** | `faculty1` | `faculty123` |
-| **Student** | `24691A05J1` | `student123` |
+| Role | Username | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | `admin123` | Full Institutional Control, Inventory CRUD, Lab Configuration, Analytics |
+| **Faculty (CSE)** | `faculty1` | `faculty123` | Equipment Reservation, Damage Ticketing, Lab Practical Apparatus Access |
+| **Faculty (ECE)** | `faculty2` | `faculty123` | Department Allocations & Maintenance Reporting |
 
 ---
 
@@ -243,15 +243,15 @@ DELETE FROM allocations WHERE allocation_id = 4;
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Authenticate user and assign session |
+| `POST` | `/api/auth/login` | Authenticate Admin / Faculty and issue session token |
 | `GET` | `/api/equipment` | Search & filter equipment catalog |
 | `GET` | `/api/equipment/:id` | Detailed equipment specifications and history |
-| `POST` | `/api/equipment` | Register new equipment (Admin/Staff) |
+| `POST` | `/api/equipment` | Register new equipment (Admin) |
 | `PUT` | `/api/equipment/:id` | Update equipment metadata |
 | `DELETE` | `/api/equipment/:id` | Remove equipment record |
 | `GET` | `/api/equipment/stats/summary` | Get aggregated KPI counts for dashboard |
 | `GET` | `/api/allocations` | List all active and completed equipment allocations |
-| `POST` | `/api/allocations` | Allocate equipment to student or faculty |
+| `POST` | `/api/allocations` | Allocate equipment to faculty / department |
 | `PUT` | `/api/allocations/:id/return` | Mark equipment returned and set status to Available |
 | `GET` | `/api/maintenance` | List all maintenance and repair tickets |
 | `POST` | `/api/maintenance/report` | Log damaged equipment and move to Under Maintenance |
@@ -259,7 +259,9 @@ DELETE FROM allocations WHERE allocation_id = 4;
 | `GET` | `/api/reports/by-laboratory` | Aggregated report grouped by lab |
 | `GET` | `/api/reports/by-category` | Aggregated report grouped by category |
 | `GET` | `/api/reports/maintenance-summary`| Breakdown of maintenance costs and ticket statuses |
-| `GET` | `/api/users` | List registered system users and students |
+| `GET` | `/api/users` | List registered faculty and administrators |
+| `POST` | `/api/users` | Register new faculty or administrator account |
+| `DELETE` | `/api/users/:id` | Delete faculty account |
 
 ---
 

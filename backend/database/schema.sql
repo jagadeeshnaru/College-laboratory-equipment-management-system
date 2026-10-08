@@ -14,7 +14,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    role ENUM('Admin', 'Faculty', 'Student') NOT NULL DEFAULT 'Student',
+    role ENUM('Admin', 'Faculty') NOT NULL DEFAULT 'Faculty',
     department VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -68,7 +68,7 @@ CREATE TABLE allocations (
     allocation_code VARCHAR(20) NOT NULL UNIQUE,
     equipment_id INT NOT NULL,
     allocated_to_name VARCHAR(100) NOT NULL,
-    allocated_to_role VARCHAR(50) NOT NULL,
+    allocated_to_role VARCHAR(50) NOT NULL DEFAULT 'Faculty',
     department VARCHAR(50) NOT NULL,
     from_date DATE NOT NULL,
     to_date DATE NOT NULL,
@@ -98,21 +98,16 @@ CREATE TABLE maintenance (
 );
 
 -- ==========================================================
--- SEED INITIAL DATA (Matching UI Mockups)
+-- SEED INITIAL DATA
 -- ==========================================================
 
--- Seed Users
+-- Seed Users (Admin and Faculty only)
 INSERT INTO users (username, password, full_name, email, role, department) VALUES
 ('admin', 'admin123', 'Administrator', 'admin@college.edu', 'Admin', 'Computer Science'),
 ('faculty1', 'faculty123', 'Dr. Ramesh Kumar', 'ramesh@college.edu', 'Faculty', 'Computer Science'),
 ('faculty2', 'faculty123', 'Prof. Sunita Rao', 'sunita@college.edu', 'Faculty', 'ECE'),
-('24691A05J1', 'student123', 'SHAIK IRFAN', '24691A05J1@college.edu', 'Student', 'CSE'),
-('24691A05J2', 'student123', 'EDAGOTTI JAGADEESH', '24691A05J2@college.edu', 'Student', 'CSE'),
-('24691A05J3', 'student123', 'NARU JAGADEESH', '24691A05J3@college.edu', 'Student', 'CSE'),
-('24691A05J4', 'student123', 'BARAKI JAHNAVI', '24691A05J4@college.edu', 'Student', 'CSE'),
-('24691A05J5', 'student123', 'BATHULA JAHNAVI', '24691A05J5@college.edu', 'Student', 'CSE'),
-('24691A05J6', 'student123', 'KONDA JAHNAVI', '24691A05J6@college.edu', 'Student', 'CSE'),
-('24691A05J7', 'student123', 'KOTHAPALLI BHARATH REDDY', '24691A05J7@college.edu', 'Student', 'CSE');
+('faculty3', 'faculty123', 'Mr. Anand Verma', 'anand@college.edu', 'Faculty', 'Information Technology'),
+('faculty4', 'faculty123', 'Mrs. Lakshmi Devi', 'lakshmi@college.edu', 'Faculty', 'Administration');
 
 -- Seed Laboratories
 INSERT INTO laboratories (lab_name, department, location, capacity, in_charge) VALUES
@@ -132,7 +127,7 @@ INSERT INTO categories (category_name, description) VALUES
 
 -- Seed Equipment
 INSERT INTO equipment (equipment_code, name, category_id, lab_id, status, purchase_date, warranty, model_number, serial_number, description, image_url) VALUES
-('EQ001', 'Dell Desktop', 1, 1, 'Available', '2024-08-12', '3 Years', 'OptiPlex 7090', 'DL-7090-8812', 'Dell OptiPlex Desktop with 8GB RAM, 512GB SSD, Intel Core i7 processor for student programming laboratory.', '/assets/dell_desktop.png'),
+('EQ001', 'Dell Desktop', 1, 1, 'Available', '2024-08-12', '3 Years', 'OptiPlex 7090', 'DL-7090-8812', 'Dell OptiPlex Desktop with 8GB RAM, 512GB SSD, Intel Core i7 processor for programming laboratory.', '/assets/dell_desktop.png'),
 ('EQ002', 'Cisco Switch', 2, 2, 'In Use', '2024-06-15', '5 Years', 'Catalyst 2960X', 'CS-2960-4491', '24-port Gigabit managed network switch used for LAN configuration and CCNA practical experiments.', '/assets/cisco_switch.png'),
 ('EQ003', 'Oscilloscope', 3, 3, 'Under Maintenance', '2023-11-20', '2 Years', 'Keysight DSOX1102G', 'KS-1102-7723', '100 MHz 2-Channel Digital Storage Oscilloscope for waveform analysis and circuit debugging.', '/assets/oscilloscope.png'),
 ('EQ004', 'Printer', 5, 4, 'Available', '2024-01-10', '1 Year', 'HP LaserJet Pro M404dn', 'HP-M404-3310', 'High-speed duplex monochrome laser printer for lab documentation and departmental report printing.', '/assets/printer.png'),
@@ -141,14 +136,14 @@ INSERT INTO equipment (equipment_code, name, category_id, lab_id, status, purcha
 ('EQ007', 'Wi-Fi Access Point', 2, 2, 'Available', '2024-05-18', '3 Years', 'Aruba AP-505', 'AR-505-1204', 'Dual-radio Wi-Fi 6 enterprise access point for networking infrastructure.', '/assets/access_point.png'),
 ('EQ008', 'Function Generator', 3, 3, 'Available', '2023-12-01', '2 Years', 'Rigol DG1022Z', 'RG-1022-8819', '25 MHz Arbitrary Waveform Generator with dual independent output channels.', '/assets/function_gen.png'),
 ('EQ009', 'MATLAB Campus License', 4, 1, 'In Use', '2024-01-01', 'Annual Subscription', 'MATLAB R2024b', 'LIC-MTLB-2024', 'Concurrent network license with Simulink, Signal Processing, and Deep Learning toolboxes.', '/assets/software_lic.png'),
-('EQ010', 'Dell Laptop', 1, 1, 'Available', '2024-10-01', '3 Years', 'Latitude 5440', 'DL-5440-6677', 'High performance laptop for student and faculty research projects.', '/assets/dell_laptop.png');
+('EQ010', 'Dell Laptop', 1, 1, 'Available', '2024-10-01', '3 Years', 'Latitude 5440', 'DL-5440-6677', 'High performance laptop for faculty research and lab demonstration.', '/assets/dell_laptop.png');
 
--- Seed Allocations
+-- Seed Allocations (Faculty allocations)
 INSERT INTO allocations (allocation_code, equipment_id, allocated_to_name, allocated_to_role, department, from_date, to_date, purpose, status, returned_date) VALUES
-('A001', 1, 'SHAIK IRFAN', 'Student (CSE)', 'CSE', '2026-09-01', '2026-09-30', 'Final Year Mini Project Development & Benchmarking', 'Active', NULL),
-('A002', 5, 'Dr. Ramesh Kumar', 'Faculty', 'CSE', '2026-09-10', '2026-09-12', 'Guest Lecture on Cloud Computing Architecture', 'Completed', '2026-09-12'),
-('A003', 2, 'EDAGOTTI JAGADEESH', 'Student (ECE)', 'ECE', '2026-09-15', '2026-09-25', 'Computer Networks Practical Assignment on VLANs', 'Active', NULL),
-('A004', 10, 'NARU JAGADEESH', 'Student (CSE)', 'CSE', '2026-09-01', '2026-09-15', 'Distributed Systems Lab Evaluation', 'Completed', '2026-09-15');
+('A001', 1, 'Dr. Ramesh Kumar', 'Faculty', 'CSE', '2026-09-01', '2026-09-30', 'Advanced Distributed Systems Laboratory Research', 'Active', NULL),
+('A002', 5, 'Prof. Sunita Rao', 'Faculty', 'ECE', '2026-09-10', '2026-09-12', 'Faculty Workshop on VLSI Circuit Design', 'Completed', '2026-09-12'),
+('A003', 2, 'Mr. Anand Verma', 'Faculty', 'IT', '2026-09-15', '2026-09-25', 'Computer Networks Practical Assignment and Testing', 'Active', NULL),
+('A004', 10, 'Dr. Ramesh Kumar', 'Faculty', 'CSE', '2026-09-01', '2026-09-15', 'Distributed Systems Lab Evaluation and Demo', 'Completed', '2026-09-15');
 
 -- Seed Maintenance Records
 INSERT INTO maintenance (maintenance_code, equipment_id, issue_description, priority, reported_by, reported_date, resolved_date, cost, status, notes) VALUES

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-// GET /api/users - List all users / students / faculty
+// GET /api/users - List all users / faculty / admin
 router.get('/', async (req, res, next) => {
   try {
     const { role } = req.query;
@@ -26,13 +26,19 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// POST /api/users - Create User
+// POST /api/users - Create User (Faculty / Admin)
 router.post('/', async (req, res, next) => {
   try {
-    const { username, password = 'password123', full_name, email, role = 'Student', department = 'CSE' } = req.body;
+    const { username, password = 'faculty123', full_name, email, role = 'Faculty', department = 'CSE' } = req.body;
 
     if (!username || !full_name || !email) {
       return res.status(400).json({ success: false, message: 'Username, Full Name, and Email are required' });
+    }
+
+    // Check if username or email already exists
+    const existing = await db.query('SELECT user_id FROM users WHERE username = ? OR email = ?', [username.trim(), email.trim()]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ success: false, message: 'A user with this username or email already exists' });
     }
 
     const insertSql = `
@@ -40,11 +46,11 @@ router.post('/', async (req, res, next) => {
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
-    const result = await db.query(insertSql, [username, password, full_name, email, role, department]);
+    const result = await db.query(insertSql, [username.trim(), password, full_name.trim(), email.trim(), role, department]);
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: `${role} account created successfully`,
       data: {
         user_id: result.insertId,
         username,
@@ -54,6 +60,26 @@ router.post('/', async (req, res, next) => {
         department
       }
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/users/:id
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userRes = await db.query('SELECT * FROM users WHERE user_id = ?', [id]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (userRes.rows[0].username === 'admin') {
+      return res.status(400).json({ success: false, message: 'Primary admin user cannot be deleted' });
+    }
+
+    await db.query('DELETE FROM users WHERE user_id = ?', [id]);
+    res.json({ success: true, message: 'User deleted successfully' });
   } catch (error) {
     next(error);
   }
