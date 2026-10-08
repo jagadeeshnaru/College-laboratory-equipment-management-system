@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
@@ -14,87 +14,165 @@ import MaintenancePage from './pages/MaintenancePage';
 import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 
-function getTabFromPath() {
-  const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
-  if (!path || path === 'dashboard') return 'dashboard';
-  if (path === 'equipment' || path === 'equipments') return 'equipment';
-  if (path === 'equipment-detail') return 'equipment-detail';
-  if (path === 'add-equipment') return 'add-equipment';
-  if (path === 'edit-equipment') return 'edit-equipment';
-  if (path === 'categories' || path === 'category') return 'categories';
-  if (path === 'laboratories' || path === 'labs' || path === 'lab') return 'laboratories';
-  if (path === 'allocations' || path === 'allocation') return 'allocations';
-  if (path === 'maintenance') return 'maintenance';
-  if (path === 'reports' || path === 'report') return 'reports';
-  if (path === 'users' || path === 'faculty') return 'users';
-  return 'dashboard';
+function parseUrl() {
+  const pathname = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  const segments = pathname.split('/').filter(Boolean);
+
+  let requestedRole = null;
+  let requestedTab = 'dashboard';
+
+  if (segments.length === 0) {
+    return { requestedRole: null, requestedTab: 'dashboard' };
+  }
+
+  if (segments[0] === 'admin') {
+    requestedRole = 'Admin';
+    requestedTab = segments[1] || 'dashboard';
+  } else if (segments[0] === 'faculty' || segments[0] === 'fac') {
+    requestedRole = 'Faculty';
+    requestedTab = segments[1] || 'dashboard';
+  } else if (segments[0] === 'login') {
+    if (segments[1] === 'admin') requestedRole = 'Admin';
+    else if (segments[1] === 'faculty' || segments[1] === 'fac') requestedRole = 'Faculty';
+    return { requestedRole, requestedTab: 'login' };
+  } else {
+    requestedTab = segments[0];
+  }
+
+  // Normalize tab names
+  if (requestedTab === 'equipment' || requestedTab === 'equipments') requestedTab = 'equipment';
+  else if (requestedTab === 'equipment-detail') requestedTab = 'equipment-detail';
+  else if (requestedTab === 'add-equipment') requestedTab = 'add-equipment';
+  else if (requestedTab === 'edit-equipment') requestedTab = 'edit-equipment';
+  else if (requestedTab === 'categories' || requestedTab === 'category') requestedTab = 'categories';
+  else if (requestedTab === 'laboratories' || requestedTab === 'labs' || requestedTab === 'lab') requestedTab = 'laboratories';
+  else if (requestedTab === 'allocations' || requestedTab === 'allocation') requestedTab = 'allocations';
+  else if (requestedTab === 'maintenance') requestedTab = 'maintenance';
+  else if (requestedTab === 'reports' || requestedTab === 'report') requestedTab = 'reports';
+  else if (requestedTab === 'users' || requestedTab === 'faculty-management') requestedTab = 'users';
+  else requestedTab = 'dashboard';
+
+  return { requestedRole, requestedTab };
+}
+
+function buildPath(role, tab) {
+  const rolePrefix = role === 'Admin' ? '/admin' : '/faculty';
+  if (!tab || tab === 'dashboard') return rolePrefix;
+  return `${rolePrefix}/${tab}`;
 }
 
 export default function App() {
   const { isAuthenticated, logout, user } = useAuth();
-  const [activeTab, setActiveTabState] = useState(() => getTabFromPath());
+  const initialUrl = parseUrl();
+
+  const [activeTab, setActiveTabState] = useState(() => initialUrl.requestedTab);
+  const [loginRole, setLoginRole] = useState(() => initialUrl.requestedRole || 'Admin');
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(null);
   const [editingEquipmentId, setEditingEquipmentId] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sync state with browser address bar
-  const setActiveTab = (tab, pushUrl = true) => {
-    setActiveTabState(tab);
-    if (pushUrl) {
-      const targetPath = tab === 'dashboard' ? '/' : `/${tab}`;
-      if (window.location.pathname !== targetPath) {
-        window.history.pushState({ tab }, '', targetPath);
+  const navigateTo = useCallback((tab, pushUrl = true) => {
+    let targetTab = tab;
+    // Disallow non-admin from users tab
+    if (user?.role === 'Faculty' && targetTab === 'users') {
+      targetTab = 'dashboard';
+    }
+
+    setActiveTabState(targetTab);
+
+    if (pushUrl && user?.role) {
+      const newPath = buildPath(user.role, targetTab);
+      if (window.location.pathname !== newPath) {
+        window.history.pushState({ tab: targetTab, role: user.role }, '', newPath);
       }
     }
-  };
+  }, [user]);
+
+  // Sync initial URL on login or role changes
+  useEffect(() => {
+    if (isAuthenticated && user?.role) {
+      const { requestedTab } = parseUrl();
+      const validTab = (user.role === 'Faculty' && requestedTab === 'users') ? 'dashboard' : (requestedTab === 'login' ? 'dashboard' : requestedTab);
+      setActiveTabState(validTab);
+      const expectedPath = buildPath(user.role, validTab);
+      if (window.location.pathname !== expectedPath) {
+        window.history.replaceState({ tab: validTab, role: user.role }, '', expectedPath);
+      }
+    }
+  }, [isAuthenticated, user]);
 
   // Listen to browser Back / Forward buttons
   useEffect(() => {
     const handlePopState = () => {
-      const tab = getTabFromPath();
-      setActiveTabState(tab);
+      const { requestedTab } = parseUrl();
+      if (user?.role === 'Faculty' && requestedTab === 'users') {
+        setActiveTabState('dashboard');
+      } else if (requestedTab !== 'login') {
+        setActiveTabState(requestedTab);
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [user]);
 
-  // If user role is Faculty and tab is 'users', redirect to dashboard
-  useEffect(() => {
-    if (user && user.role === 'Faculty' && activeTab === 'users') {
-      setActiveTab('dashboard');
+  // Handle Login Role Switcher
+  const handleLoginRoleChange = (role) => {
+    setLoginRole(role);
+    const newPath = role === 'Admin' ? '/admin' : '/faculty';
+    if (window.location.pathname !== newPath) {
+      window.history.replaceState(null, '', newPath);
     }
-  }, [user, activeTab]);
+  };
 
-  // If not logged in, show login page
+  const handleLoginSuccess = (loggedInRole) => {
+    const role = loggedInRole || user?.role || 'Admin';
+    setActiveTabState('dashboard');
+    const newPath = role === 'Admin' ? '/admin' : '/faculty';
+    window.history.pushState({ tab: 'dashboard', role }, '', newPath);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.history.pushState(null, '', '/login');
+  };
+
+  // If not logged in, render LoginPage with initial selected tab
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={() => setActiveTab('dashboard')} />;
+    return (
+      <LoginPage
+        initialRole={loginRole}
+        onRoleChange={handleLoginRoleChange}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
   }
 
   const handleSelectEquipment = (id) => {
     setSelectedEquipmentId(id);
-    setActiveTab('equipment-detail');
+    navigateTo('equipment-detail');
   };
 
   const handleAddEquipment = () => {
     setEditingEquipmentId(null);
-    setActiveTab('add-equipment');
+    navigateTo('add-equipment');
   };
 
   const handleEditEquipment = (id) => {
     setEditingEquipmentId(id);
-    setActiveTab('edit-equipment');
+    navigateTo('edit-equipment');
   };
 
   const handleSaveSuccess = () => {
     setSelectedEquipmentId(null);
     setEditingEquipmentId(null);
-    setActiveTab('equipment');
+    navigateTo('equipment');
   };
 
-  const handleNavigate = (tab) => {
+  const handleSidebarNavigate = (tab) => {
     setSelectedEquipmentId(null);
     setEditingEquipmentId(null);
-    setActiveTab(tab);
+    navigateTo(tab);
     setIsMobileSidebarOpen(false);
   };
 
@@ -136,7 +214,7 @@ export default function App() {
             ? 'equipment'
             : activeTab
         }
-        setActiveTab={handleNavigate}
+        setActiveTab={handleSidebarNavigate}
         isOpen={isMobileSidebarOpen}
         onClose={() => setIsMobileSidebarOpen(false)}
       />
@@ -144,14 +222,12 @@ export default function App() {
       <main className="main-content">
         <Navbar
           title={getPageTitle()}
-          onLogoutClick={() => {
-            logout();
-          }}
+          onLogoutClick={handleLogout}
           onToggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
         <div className="page-body">
-          {activeTab === 'dashboard' && <DashboardPage onNavigate={handleNavigate} />}
+          {activeTab === 'dashboard' && <DashboardPage onNavigate={handleSidebarNavigate} />}
 
           {activeTab === 'equipment' && (
             <EquipmentListPage
@@ -163,7 +239,7 @@ export default function App() {
           {activeTab === 'equipment-detail' && (
             <EquipmentDetailPage
               equipmentId={selectedEquipmentId}
-              onBack={() => setActiveTab('equipment')}
+              onBack={() => navigateTo('equipment')}
               onEditClick={(id) => handleEditEquipment(id)}
             />
           )}
@@ -171,7 +247,7 @@ export default function App() {
           {(activeTab === 'add-equipment' || activeTab === 'edit-equipment') && (
             <AddEditEquipmentPage
               editId={editingEquipmentId}
-              onBack={() => setActiveTab('equipment')}
+              onBack={() => navigateTo('equipment')}
               onSaveSuccess={handleSaveSuccess}
             />
           )}
@@ -188,7 +264,7 @@ export default function App() {
 
           {activeTab === 'reports' && <ReportsPage />}
 
-          {activeTab === 'users' && (user?.role === 'Admin' ? <UsersPage /> : <DashboardPage onNavigate={handleNavigate} />)}
+          {activeTab === 'users' && (user?.role === 'Admin' ? <UsersPage /> : <DashboardPage onNavigate={handleSidebarNavigate} />)}
         </div>
       </main>
     </div>

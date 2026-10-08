@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   GraduationCap,
@@ -14,20 +14,27 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, initialRole = 'Admin', onRoleChange }) {
   const { login } = useAuth();
-  const [role, setRole] = useState('Admin'); // 'Admin' or 'Faculty'
+  const [role, setRole] = useState(initialRole || 'Admin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (initialRole && (initialRole === 'Admin' || initialRole === 'Faculty')) {
+      setRole(initialRole);
+    }
+  }, [initialRole]);
+
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
     setError('');
     setUsername('');
     setPassword('');
+    if (onRoleChange) onRoleChange(selectedRole);
   };
 
   const handleSubmit = async (e) => {
@@ -44,7 +51,7 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
       await login(username.trim(), password, role);
       setLoading(false);
-      if (onLoginSuccess) onLoginSuccess();
+      if (onLoginSuccess) onLoginSuccess(role);
     } catch (err) {
       setError(err.message || 'Invalid login credentials. Please check your username and password.');
       setLoading(false);
@@ -92,7 +99,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 <GraduationCap size={18} />
               </div>
               <div>
-                <strong>Faculty Portal</strong>
+                <strong>Faculty Academic Portal</strong>
                 <p>Reserve lab apparatus, report maintenance issues, and manage classroom practicals</p>
               </div>
             </div>
@@ -159,7 +166,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder={role === 'Admin' ? 'Enter admin username' : 'Enter faculty username or email'}
+                    placeholder={role === 'Admin' ? 'Enter admin username (e.g. admin)' : 'Enter faculty username (e.g. faculty1)'}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
