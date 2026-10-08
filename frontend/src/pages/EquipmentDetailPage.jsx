@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, AlertTriangle, CalendarCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Edit, AlertTriangle, CalendarCheck, QrCode, Printer, X } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import ReportDamageModal from '../components/ReportDamageModal';
 import AddAllocationModal from '../components/AddAllocationModal';
@@ -10,6 +10,7 @@ export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }
   const [loading, setLoading] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isAllocModalOpen, setIsAllocModalOpen] = useState(false);
+  const [isAssetTagOpen, setIsAssetTagOpen] = useState(false);
 
   const fetchDetail = async () => {
     try {
@@ -55,13 +56,19 @@ export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a' }}>Equipment Details</h2>
-        <button className="btn btn-secondary" onClick={onBack}>
-          <ArrowLeft size={16} />
-          <span>Back</span>
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-secondary" onClick={() => setIsAssetTagOpen(true)}>
+            <QrCode size={16} />
+            <span>Print Asset Tag</span>
+          </button>
+          <button className="btn btn-secondary" onClick={onBack}>
+            <ArrowLeft size={16} />
+            <span>Back</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Spec Card */}
+      {/* Main Spec Card (Matching Mockup Screen 4) */}
       <div className="card" style={{ padding: '32px', marginBottom: '24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '36px', alignItems: 'start' }}>
           {/* Equipment Image */}
@@ -136,7 +143,7 @@ export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }
               </tbody>
             </table>
 
-            {/* Bottom Actions */}
+            {/* Bottom Actions (Matching Mockup Screen 4: Allocate, Report Damage, Edit) */}
             <div style={{ display: 'flex', gap: '14px', marginTop: '24px' }}>
               <button
                 className="btn btn-primary"
@@ -230,6 +237,75 @@ export default function EquipmentDetailPage({ equipmentId, onBack, onEditClick }
           )}
         </div>
       </div>
+
+      {/* Asset Tag & QR Modal */}
+      {isAssetTagOpen && (
+        <div className="modal-overlay">
+          <div className="modal-card" style={{ maxWidth: '440px' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Official Asset Tag</h3>
+              <button className="modal-close" onClick={() => setIsAssetTagOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  border: '2px dashed #3b82f6',
+                  borderRadius: '12px',
+                  padding: '24px 20px',
+                  background: '#f8fafc',
+                  marginBottom: '16px'
+                }}
+              >
+                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1e3a8a', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  COLLEGE LABORATORY ASSET
+                </div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: '6px 0' }}>
+                  {equipment.equipment_code}
+                </div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#334155' }}>
+                  {equipment.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+                  {equipment.lab_name} • {equipment.category_name}
+                </div>
+
+                {/* SVG QR Code Simulation */}
+                <div style={{ margin: '16px auto', width: '120px', height: '120px', background: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg viewBox="0 0 100 100" width="100" height="100">
+                    <rect x="0" y="0" width="30" height="30" fill="#0f172a" />
+                    <rect x="5" y="5" width="20" height="20" fill="#ffffff" />
+                    <rect x="10" y="10" width="10" height="10" fill="#0f172a" />
+                    <rect x="70" y="0" width="30" height="30" fill="#0f172a" />
+                    <rect x="75" y="5" width="20" height="20" fill="#ffffff" />
+                    <rect x="80" y="10" width="10" height="10" fill="#0f172a" />
+                    <rect x="0" y="70" width="30" height="30" fill="#0f172a" />
+                    <rect x="5" y="75" width="20" height="20" fill="#ffffff" />
+                    <rect x="10" y="80" width="10" height="10" fill="#0f172a" />
+                    <rect x="40" y="10" width="10" height="20" fill="#0f172a" />
+                    <rect x="40" y="40" width="20" height="20" fill="#0f172a" />
+                    <rect x="70" y="50" width="20" height="10" fill="#0f172a" />
+                    <rect x="50" y="70" width="20" height="20" fill="#0f172a" />
+                  </svg>
+                </div>
+
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                  Scan to verify asset authentication on Lab EMS
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-primary" onClick={() => window.print()}>
+                <Printer size={15} /> Print Tag
+              </button>
+              <button className="btn btn-secondary" onClick={() => setIsAssetTagOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <ReportDamageModal

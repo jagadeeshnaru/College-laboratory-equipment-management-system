@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Download, Printer, FileSpreadsheet, Layers } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import { api } from '../services/api';
 
@@ -34,12 +35,71 @@ export default function ReportsPage() {
     loadReports();
   }, []);
 
+  // CSV Export Utility
+  const handleExportCSV = () => {
+    let filename = `Lab_EMS_Report_${activeTab}_${new Date().toISOString().split('T')[0]}.csv`;
+    let csvContent = 'data:text/csv;charset=utf-8,';
+
+    if (activeTab === 'lab') {
+      csvContent += 'Laboratory,Total Equipment,Available,In Use,Under Maintenance,Damaged\n';
+      labReport.data.forEach((row) => {
+        csvContent += `"${row.laboratory}",${row.total_equipment},${row.available},${row.in_use},${row.under_maintenance},${row.damaged}\n`;
+      });
+      if (labReport.totals) {
+        csvContent += `"Total",${labReport.totals.total_equipment},${labReport.totals.available},${labReport.totals.in_use},${labReport.totals.under_maintenance},${labReport.totals.damaged}\n`;
+      }
+    } else if (activeTab === 'category') {
+      csvContent += 'Category,Total Equipment,Available,In Use,Under Maintenance,Damaged\n';
+      catReport.data.forEach((row) => {
+        csvContent += `"${row.category}",${row.total_equipment},${row.available},${row.in_use},${row.under_maintenance},${row.damaged}\n`;
+      });
+      if (catReport.totals) {
+        csvContent += `"Total",${catReport.totals.total_equipment},${catReport.totals.available},${catReport.totals.in_use},${catReport.totals.under_maintenance},${catReport.totals.damaged}\n`;
+      }
+    } else if (activeTab === 'maintenance') {
+      csvContent += 'Ticket,Equipment,Laboratory,Issue,Priority,Cost,Status\n';
+      maintReport.records.forEach((r) => {
+        csvContent += `"${r.maintenance_code}","${r.equipment_name}","${r.lab_name}","${r.issue_description}","${r.priority}",${r.cost},"${r.status}"\n`;
+      });
+    } else {
+      csvContent += 'Code,Equipment,Category,Laboratory,Status,Reported Issue,Priority\n';
+      damagedReport.forEach((d) => {
+        csvContent += `"${d.equipment_code}","${d.name}","${d.category_name}","${d.lab_name}","${d.status}","${d.issue_description || ''}","${d.priority || ''}"\n`;
+      });
+    }
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div>
-      {/* Header */}
-      <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a', marginBottom: '20px' }}>
-        Equipment Reports
-      </h2>
+      {/* Header & Export Actions */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0f172a' }}>
+          Equipment Reports
+        </h2>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={handleExportCSV} title="Download CSV Spreadsheet">
+            <FileSpreadsheet size={15} color="#059669" />
+            <span>Export CSV</span>
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={handlePrint} title="Print or Save PDF">
+            <Printer size={15} color="#2563eb" />
+            <span>Print Report</span>
+          </button>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
